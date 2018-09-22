@@ -13,4 +13,22 @@ public class Card {
         this.damage = cost;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Card card = (Card) o;
+
+        return cost == card.cost;
+    }
+
+    @Override
+    public int hashCode() {
+        return cost;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
 }
