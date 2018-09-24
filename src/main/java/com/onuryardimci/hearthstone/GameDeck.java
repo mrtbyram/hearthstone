@@ -43,10 +43,9 @@ public class GameDeck {
     }
 
     public Optional<Card> drawCard() {
-        try {
-            return Optional.of(this.cards.pop());
-        } catch (NoSuchElementException e) {
+        if (cards.size() == 0) {
             return Optional.empty();
         }
+        return Optional.of(cards.pop());
     }
 }
