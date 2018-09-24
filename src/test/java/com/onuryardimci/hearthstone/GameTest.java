@@ -27,10 +27,12 @@ public class GameTest {
 
     @org.junit.Before
     public void setUp() throws Exception {
-        Player player1 = new Player();
-        Player player2 = new Player();
+        Player player1 = new Player(1, "onur");
+        Player player2 = new Player(2, "yardimci");
         GamePlayer gamePlayer1 = Mockito.mock(GamePlayer.class);
+        Mockito.when(gamePlayer1.getPlayer()).thenReturn(player1);
         GamePlayer gamePlayer2 = Mockito.mock(GamePlayer.class);
+        Mockito.when(gamePlayer2.getPlayer()).thenReturn(player2);
         Mockito.when(gamePlayerFactory.create(Mockito.eq(player1), Mockito.any(GameDeck.class), Mockito.eq(sut))).thenReturn(gamePlayer1);
         Mockito.when(gamePlayerFactory.create(Mockito.eq(player2), Mockito.any(GameDeck.class), Mockito.eq(sut))).thenReturn(gamePlayer2);
         sut.assignPlayer(player1, DeckTest.VALID_DECK);
@@ -73,7 +75,7 @@ public class GameTest {
     }
 
     @Test
-    public void should_not_play_passive_player() {
+    public void should_not_allow_passive_player_to_play_card() {
         sut.start();
         expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Only active players can play card.");
@@ -96,21 +98,11 @@ public class GameTest {
     }
 
     @Test
-    public void should_not_play_card_when_game_state_other_than_ongoing() {
+    public void should_not_allow_play_card_when_game_state_other_than_ongoing() {
         expectedEx.expect(IllegalStateException.class);
         expectedEx.expectMessage("Cards are playable only in ongoing state.");
 
         sut.playCard(new Card(0), new GamePlayer(new Player(), new GameDeck(DeckTest.VALID_DECK.getCards()), null));
-    }
-
-    @Test
-    public void should_end_the_game_when_a_player_health_drop_to_zero_or_less() {
-        sut.start();
-        GamePlayer activePlayer = sut.getActivePlayer();
-
-        sut.playCard(new Card(GamePlayer.INITIAL_HEALTH + 1), activePlayer);
-
-        Assert.assertEquals(GameState.FINISHED, sut.getState());
     }
 
     @Test
@@ -133,6 +125,32 @@ public class GameTest {
         sut.endTurn(activePlayer);
 
         Mockito.verify(passivePlayerBeforeEndTurn, Mockito.times(1)).notifyActivePlayer();
+    }
+
+    @Test
+    public void should_not_allow_passive_player_to_end_turn() {
+        sut.start();
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("Only active players can end turn.");
+
+        sut.endTurn(sut.getPassivePlayer());
+    }
+
+    @Test
+    public void should_not_allow_end_turn_when_game_state_other_than_ongoing() {
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("End turn is applicable only in ongoing state.");
+
+        sut.endTurn(null);
+    }
+
+    @Test
+    public void should_notify_all_players_as_game_ended_when_a_player_is_killed() {
+        sut.start();
+        sut.killPlayer(sut.getPassivePlayer());
+
+        Mockito.verify(sut.getActivePlayer(), Mockito.times(1)).endGame();
+        Mockito.verify(sut.getPassivePlayer(), Mockito.times(1)).endGame();
     }
 
 }

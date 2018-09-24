@@ -15,4 +15,8 @@ public class Player {
         this.id = id;
         this.userName = userName;
     }
+
+    public String getUserName() {
+        return userName;
+    }
 }

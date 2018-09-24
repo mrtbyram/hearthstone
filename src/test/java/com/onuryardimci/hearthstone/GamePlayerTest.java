@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * Created by onury.
@@ -78,7 +79,7 @@ public class GamePlayerTest {
 
     @Test
     public void should_draw_card_when_player_gotten_active() {
-        Mockito.when(sut.getGameDeck().drawCard()).thenReturn(new Card(1));
+        Mockito.when(sut.getGameDeck().drawCard()).thenReturn(Optional.of(new Card(1)));
 
         sut.notifyActivePlayer();
 
@@ -89,10 +90,76 @@ public class GamePlayerTest {
     @Test
     public void should_play_card_from_hand() {
         Card cardToBePlayed = new Card(1);
+        sut.notifyActivePlayer();
 
         sut.playCard(cardToBePlayed);
 
         Mockito.verify(sut.getHand(), Mockito.times(1)).playCard(cardToBePlayed);
         Mockito.verify(sut.getGameMediator(), Mockito.times(1)).playCard(cardToBePlayed, sut);
+    }
+
+    @Test
+    public void should_kill_the_player_when_a_player_health_drop_to_zero_or_less() {
+        sut.dealDamage(GamePlayer.INITIAL_HEALTH + 1);
+
+        Mockito.verify(sut.getGameMediator(), Mockito.times(1)).killPlayer(sut);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void should_not_play_card_if_sufficient_mana_does_not_exist() {
+        Card cardToBePlayed = new Card(8);
+
+        sut.playCard(cardToBePlayed);
+    }
+
+    @Test
+    public void should_decrease_mana_as_played_card_cost() {
+        Card cardToBePlayed = new Card(1);
+        sut.notifyActivePlayer();
+        int totalManaBeforePlay = sut.getMana().getTotal();
+
+        sut.playCard(cardToBePlayed);
+
+        Assert.assertEquals(totalManaBeforePlay - cardToBePlayed.getCost(), sut.getMana().getRemaining());
+    }
+
+    @Test
+    public void should_take_damage_when_draw_card_from_empty_game_deck() {
+        Mockito.when(sut.getGameDeck().drawCard()).thenReturn(Optional.empty());
+        int healthBeforeCardDraw = sut.getHealth();
+
+        sut.notifyActivePlayer();
+
+        Assert.assertEquals(healthBeforeCardDraw - 1, sut.getHealth());
+    }
+
+    @Test
+    public void should_not_end_turn_while_game_is_not_running() {
+        sut.endGame();
+        sut.endTurn();
+
+        Mockito.verify(sut.getGameMediator(), Mockito.times(0)).endTurn(sut);
+    }
+
+    @Test
+    public void should_not_play_card_while_game_is_not_running() {
+        sut.endGame();
+        sut.playCard(null);
+
+        Mockito.verify(sut.getGameMediator(), Mockito.times(0)).playCard(null, sut);
+    }
+
+    @Test
+    public void should_end_turn_when_no_more_available_play_left() {
+        sut.endTurn();
+
+        Mockito.verify(sut.getGameMediator(), Mockito.times(1)).endTurn(sut);
+    }
+
+    @Test
+    public void should_end_game(){
+        sut.endGame();
+
+        Assert.assertEquals(Boolean.FALSE, sut.getGameRunning());
     }
 }

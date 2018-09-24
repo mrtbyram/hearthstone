@@ -31,4 +31,8 @@ public class Card {
     public int getDamage() {
         return damage;
     }
+
+    public int getCost() {
+        return cost;
+    }
 }

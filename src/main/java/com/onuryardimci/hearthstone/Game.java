@@ -15,6 +15,7 @@ public class Game implements GameMediator {
     private GameState state;
     private ActivePlayer activePlayer;
     private GamePlayerFactory gamePlayerFactory;
+    private String summary;
 
     public Game() {
         this.gamePlayerFactory = new GamePlayerFactory();
@@ -69,9 +70,6 @@ public class Game implements GameMediator {
         }
         GamePlayer opponentPlayer = findOpponentPlayer(gamePlayer);
         opponentPlayer.dealDamage(card.getDamage());
-        if (opponentPlayer.getHealth() <= 0) {
-            this.state = GameState.FINISHED;
-        }
     }
 
     private GamePlayer findOpponentPlayer(GamePlayer gamePlayer) {
@@ -92,7 +90,28 @@ public class Game implements GameMediator {
         changeActivePlayer();
     }
 
+    @Override
+    public void killPlayer(GamePlayer gamePlayer) {
+        endGame();
+        GamePlayer winner = findOpponentPlayer(gamePlayer);
+        this.summary = String.format("Winner is %s remaining health: %d \nLoser is %s health: %d",
+                winner.getPlayer().getUserName(), winner.getHealth(),
+                gamePlayer.getPlayer().getUserName(), gamePlayer.getHealth());
+    }
+
+    private void endGame() {
+        this.state = GameState.FINISHED;
+        this.players.forEach(GamePlayer::endGame);
+    }
+
     public void setGamePlayerFactory(GamePlayerFactory gamePlayerFactory) {
         this.gamePlayerFactory = gamePlayerFactory;
+    }
+
+    public String simulateGame() {
+        do {
+            getActivePlayer().simulatePlay();
+        } while (!state.equals(GameState.FINISHED));
+        return summary;
     }
 }

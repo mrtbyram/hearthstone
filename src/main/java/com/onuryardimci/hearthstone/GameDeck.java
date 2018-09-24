@@ -1,9 +1,6 @@
 package com.onuryardimci.hearthstone;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by onury.
@@ -37,12 +34,19 @@ public class GameDeck {
     public List<Card> drawCards(int numberOfCards) {
         List<Card> drawnCards = new ArrayList<>();
         for (int i = 0; i < numberOfCards; i++) {
-            drawnCards.add(drawCard());
+            Optional<Card> drawnCard = drawCard();
+            if (drawnCard.isPresent()) {
+                drawnCards.add(drawnCard.get());
+            }
         }
         return drawnCards;
     }
 
-    public Card drawCard() {
-        return this.cards.pop();
+    public Optional<Card> drawCard() {
+        try {
+            return Optional.of(this.cards.pop());
+        } catch (NoSuchElementException e) {
+            return Optional.empty();
+        }
     }
 }

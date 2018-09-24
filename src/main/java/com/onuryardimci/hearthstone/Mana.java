@@ -17,4 +17,15 @@ public class Mana {
     public int getTotal() {
         return total;
     }
+
+    public void playCard(Card card) {
+        if (remaining < card.getCost()) {
+            throw new IllegalArgumentException("Not enough mana.");
+        }
+        remaining -= card.getCost();
+    }
+
+    public int getRemaining() {
+        return remaining;
+    }
 }
